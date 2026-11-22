@@ -8,7 +8,7 @@
 
 Part Animator runs entirely in your web browser with no installation or build steps required.
 1. Click **＋ Import** in the top bar to load transparent `.png`, `.webp`, or `.jpeg` images (e.g., character body parts like head, torso, arms, and legs).
-2. Imported images automatically become reusable **Graphic Symbols** in your Library and are placed onto the center of the stage ($800 \times 600$).
+2. Imported images automatically become reusable **Graphic Symbols** in your Library and are placed onto the center of the stage ($1280 \times 720$).
 
 ---
 
@@ -36,8 +36,8 @@ Switch between the **Layers** and **Library** tabs at the top of the panel:
 
 ### 3. Center Panel: Stage & Viewport
 * **Direct Manipulation:** Click and drag on the canvas to move the currently selected layer.
-* **Fit:** Resets zoom and centers the $800 \times 600$ stage inside your viewport.
-* **Center:** Snaps the selected layer to the exact center of the stage ($400, 300$).
+* **Fit:** Resets zoom and centers the $1280 \times 720$ stage inside your viewport.
+* **Center:** Snaps the selected layer to the exact center of the stage ($640, 360$).
 * **Onion: On/Off:** Toggles onion skinning, displaying a semi-transparent ghost of the previous frame to help align smooth motion.
 * **← Scene:** Appears when editing inside a Symbol; click it to return to the main Stage timeline.
 
