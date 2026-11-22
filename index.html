@@ -19,6 +19,14 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .props{padding:10px;overflow:auto}.field{display:grid;grid-template-columns:65px 1fr 54px;align-items:center;gap:7px;margin:9px 0;color:var(--muted)}.field input[type=range]{width:100%;min-width:0}.field input[type=number],.field input[type=text]{width:100%;background:#111722;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px}.field output{text-align:right;color:var(--text);font-variant-numeric:tabular-nums}
 .timeline{grid-column:2/4;display:flex;flex-direction:column}.timebar{display:flex;gap:7px;align-items:center;padding:7px 9px;border-bottom:1px solid var(--line);flex-wrap:wrap}.timebar label{color:var(--muted);display:flex;align-items:center;gap:5px}.timebar input{width:58px;background:#111722;color:white;border:1px solid var(--line);border-radius:5px;padding:5px}.timeline-body{overflow:auto;flex:1}.track{display:flex;min-height:34px;border-bottom:1px solid #2a3445;align-items:stretch}.trackname{width:135px;flex:none;padding:8px;border-right:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}.cells{display:flex;position:relative}.cell{width:24px;flex:none;border-right:1px solid #293346;position:relative;cursor:pointer}.cell.playhead{background:#31495d}.diamond{position:absolute;width:9px;height:9px;background:var(--orange);transform:rotate(45deg);left:7px;top:12px;border-radius:1px}.ruler{display:flex;min-height:24px;border-bottom:1px solid var(--line)}.ruler .trackname{padding:4px 8px}.ruler .cell{font-size:10px;color:var(--muted);padding-left:4px}
 .empty{color:var(--muted);text-align:center;padding:25px 12px}.hint{font-size:11px;color:var(--muted);padding:8px 10px;line-height:1.45}.hidden{display:none!important}
+.modal-backdrop{position:fixed;inset:0;background:rgba(10,14,22,.75);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;width:min(340px,90vw);box-shadow:0 12px 32px rgba(0,0,0,.5)}
+.modal-box h4{margin:0 0 12px;font-size:15px}
+.modal-input-wrap{display:flex;align-items:center;background:#111722;border:1px solid var(--line);border-radius:7px;padding-right:10px;margin-bottom:14px}
+.modal-input-wrap:focus-within{border-color:var(--accent)}
+.modal-input-wrap input{flex:1;min-width:0;background:transparent;border:0;color:var(--text);padding:9px 10px;outline:none}
+.modal-input-wrap span{color:var(--muted);font-size:13px;user-select:none}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px}
 @media(max-width:850px){.app{grid-template-columns:190px minmax(0,1fr);grid-template-rows:minmax(260px,1fr) 175px 180px}.left{grid-row:1/3}.center{grid-column:2}.right{grid-column:1/3;grid-row:3}.timeline{grid-column:1/3;grid-row:2}.right h3{padding:7px 10px}.props{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 10px}.field{grid-template-columns:50px 1fr 40px;margin:5px 0}}
 @media(max-width:560px){header{height:48px}.brand{font-size:14px}.app{height:calc(100dvh - 48px);grid-template-columns:1fr 1fr;grid-template-rows:minmax(210px,1fr) 160px 180px;gap:5px;padding:5px}.left{grid-column:1;grid-row:2}.center{grid-column:1/3;grid-row:1}.right{grid-column:2;grid-row:2}.timeline{grid-column:1/3;grid-row:3}.layer-actions button{padding:6px}.layer{padding:6px}.trackname{width:105px}.cell{width:22px}.field{grid-template-columns:42px 1fr 34px;font-size:11px}.props{padding:6px;display:block}.field{margin:6px 0}.toolbar{gap:4px;padding:5px}.toolbar button{padding:6px;font-size:12px}}
 </style>
@@ -30,6 +38,19 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 <section class="panel center"><div class="toolbar"><button id="fitBtn">Fit</button><button id="centerBtn">Center</button><button id="onionBtn">Onion: Off</button><span style="margin-left:auto;color:var(--muted);font-size:11px" id="stageInfo">Stage · 1280 × 720</span></div><div class="workspace"><canvas id="stage"></canvas></div></section>
 <section class="panel right"><h3>Properties · selected part</h3><div class="props" id="props"><div class="empty">Select a layer to edit its transform.</div></div></section>
 <section class="panel timeline"><div class="timebar"><button id="playBtn">▶ Play</button><button id="stopBtn">■</button><button id="keyBtn" class="primary">◆ Keyframe</button><button id="prevBtn">◀</button><button id="nextBtn">▶</button><label>Frame <input id="frameInput" type="number" min="1" value="1"></label><label>FPS <input id="fpsInput" type="number" min="1" max="60" value="24"></label><span id="playState" style="color:var(--muted);font-size:11px">Stopped</span></div><div class="timeline-body" id="timeline"></div></section>
+</div>
+<div id="saveModal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <h4>Save Project</h4>
+    <div class="modal-input-wrap">
+      <input id="saveNameInput" type="text" placeholder="Project name" value="PartAnimator-Project">
+      <span>.partanim</span>
+    </div>
+    <div class="modal-actions">
+      <button id="cancelSaveBtn">Cancel</button>
+      <button id="confirmSaveBtn" class="primary">Save</button>
+    </div>
+  </div>
 </div>
 <script>
 (()=>{
@@ -66,33 +87,59 @@ document.addEventListener('pointermove',e=>{if(!libraryDrag)return;let dx=e.clie
 document.addEventListener('pointerup',e=>{if(!libraryDrag)return;let d=libraryDrag;libraryDrag=null;if(dragGhost){dragGhost.remove();dragGhost=null}if(!d.moved)return;let r=canvas.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)return;let item=sym(d.id);if(!item)return;selectedLibrary=d.id;let l=makeLayer(item.name,null,item.id);let x=(e.clientX-r.left-offsetX)/scale,y=(e.clientY-r.top-offsetY)/scale;l.transform.x=x;l.transform.y=y;l.keys=[{f:frame,t:{...l.transform}}];$('layersTab').click();renderAll()});
 
   // Save/load the complete editable project, including imported bitmap data.
-  $('saveProjectBtn').onclick=async()=>{
-    try{
-      const imageData=[];
-      for(const a of assets){
-        const c=document.createElement('canvas');
-        c.width=a.img.naturalWidth||a.img.width;
-        c.height=a.img.naturalHeight||a.img.height;
-        c.getContext('2d').drawImage(a.img,0,0);
-        imageData.push({id:a.id,name:a.name,data:c.toDataURL('image/png')});
+  let lastSavedName = 'PartAnimator-Project';
+
+  function executeSave(rawName) {
+    try {
+      const cleanName = (rawName.trim() || 'PartAnimator-Project').replace(/\.partanim$/i, '');
+      lastSavedName = cleanName;
+      const imageData = [];
+      for (const a of assets) {
+        const c = document.createElement('canvas');
+        c.width = a.img.naturalWidth || a.img.width;
+        c.height = a.img.naturalHeight || a.img.height;
+        c.getContext('2d').drawImage(a.img, 0, 0);
+        imageData.push({ id: a.id, name: a.name, data: c.toDataURL('image/png') });
       }
-      const project={
-        format:'PartAnimatorProject',version:1,
-        stage:{width:stageW,height:stageH},
-        fps,frame,selected,selectedLibrary,editingSymbol,
-        assets:imageData,symbols,
-        layers,mainLayers
+      const project = {
+        format: 'PartAnimatorProject', version: 1,
+        stage: { width: stageW, height: stageH },
+        fps, frame, selected, selectedLibrary, editingSymbol,
+        assets: imageData, symbols,
+        layers, mainLayers
       };
-      download('PartAnimator-Project.partanim',new Blob([JSON.stringify(project)],{type:'application/json'}));
-      $('playState').textContent='Project saved';
-    }catch(err){
-      alert('Could not save project: '+err.message);
+      download(cleanName + '.partanim', new Blob([JSON.stringify(project)], { type: 'application/octet-stream' }));
+      $('playState').textContent = 'Saved ' + cleanName + '.partanim';
+    } catch (err) {
+      alert('Could not save project: ' + err.message);
     }
+  }
+
+  $('saveProjectBtn').onclick = () => {
+    $('saveNameInput').value = lastSavedName;
+    $('saveModal').classList.remove('hidden');
+    $('saveNameInput').focus();
+    $('saveNameInput').select();
   };
+
+  $('cancelSaveBtn').onclick = () => $('saveModal').classList.add('hidden');
+  $('confirmSaveBtn').onclick = () => {
+    $('saveModal').classList.add('hidden');
+    executeSave($('saveNameInput').value);
+  };
+  $('saveNameInput').onkeydown = e => {
+    if (e.key === 'Enter') $('confirmSaveBtn').click();
+    if (e.key === 'Escape') $('cancelSaveBtn').click();
+  };
+  $('saveModal').onclick = e => {
+    if (e.target === $('saveModal')) $('cancelSaveBtn').click();
+  };
+
   $('openProjectBtn').onclick=()=>$('projectInput').click();
   $('projectInput').onchange=async e=>{
     const file=e.target.files[0];e.target.value='';
     if(!file)return;
+    lastSavedName = file.name.replace(/\.[^.]+$/, '');
     try{
       const project=JSON.parse(await file.text());
       if(project.format!=='PartAnimatorProject')throw new Error('This is not a PartAnimator project.');
