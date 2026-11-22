@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Part Animator</title>
+<style>
+:root{color-scheme:dark;--bg:#11151d;--panel:#1b2230;--panel2:#242d3d;--line:#344157;--text:#edf2fa;--muted:#9eabc0;--accent:#55c4df;--orange:#ffbd69}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui, sans-serif;overflow:hidden}
+button,input,select{font:inherit}button{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px 11px;cursor:pointer}button.primary{background:#17677c;border-color:#278ca5}button:active{filter:brightness(1.25)}button:disabled{opacity:.4}
+header{height:52px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--line);background:#151b25}
+.brand{font-weight:750;font-size:16px;margin-right:auto}.brand span{color:var(--accent)}
+.app{height:calc(100dvh - 52px);display:grid;grid-template-columns:245px minmax(0,1fr) 255px;grid-template-rows:minmax(0,1fr) 190px;gap:8px;padding:8px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-height:0;overflow:hidden}.panel h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0;padding:11px 12px;border-bottom:1px solid var(--line)}
+.left{grid-row:1/3;display:flex;flex-direction:column}.side-tabs{display:flex;border-bottom:1px solid var(--line)}.side-tabs button{flex:1;border:0;border-radius:0;background:transparent}.side-tabs button.selected{color:var(--accent);box-shadow:inset 0 -2px var(--accent)}.pane{display:flex;flex-direction:column;min-height:0;flex:1}.library-item{display:flex;align-items:center;gap:8px;padding:8px;margin:2px;border:1px solid transparent;border-radius:7px;cursor:grab;touch-action:none;user-select:none}.library-item.active{background:#26394b;border-color:#39718a}.library-item .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.library-item small{color:var(--muted)}.crumb{font-size:11px;color:var(--orange);padding:5px 10px;border-bottom:1px solid var(--line)}.right{display:flex;flex-direction:column}.center{display:flex;flex-direction:column;min-width:0}
+.toolbar{display:flex;gap:6px;align-items:center;padding:8px;border-bottom:1px solid var(--line);flex-wrap:wrap}.toolbar button{padding:7px 9px}.workspace{position:relative;flex:1;min-height:0;overflow:hidden;background-color:#10151d;background-image:linear-gradient(45deg,#19212d 25%,transparent 25%),linear-gradient(-45deg,#19212d 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#19212d 75%),linear-gradient(-45deg,transparent 75%,#19212d 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.layer-actions{display:flex;gap:5px;padding:8px}.layer-list{overflow:auto;padding:4px;flex:1}.layer{display:flex;align-items:center;gap:7px;padding:8px;border-radius:7px;margin:2px 0;cursor:pointer;border:1px solid transparent}.layer.active{background:#26394b;border-color:#39718a}.layer .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.layer small{color:var(--muted)}.icon{border:0;background:transparent;padding:4px}
+.props{padding:10px;overflow:auto}.field{display:grid;grid-template-columns:65px 1fr 54px;align-items:center;gap:7px;margin:9px 0;color:var(--muted)}.field input[type=range]{width:100%;min-width:0}.field input[type=number],.field input[type=text]{width:100%;background:#111722;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px}.field output{text-align:right;color:var(--text);font-variant-numeric:tabular-nums}
+.timeline{grid-column:2/4;display:flex;flex-direction:column}.timebar{display:flex;gap:7px;align-items:center;padding:7px 9px;border-bottom:1px solid var(--line);flex-wrap:wrap}.timebar label{color:var(--muted);display:flex;align-items:center;gap:5px}.timebar input{width:58px;background:#111722;color:white;border:1px solid var(--line);border-radius:5px;padding:5px}.timeline-body{overflow:auto;flex:1}.track{display:flex;min-height:34px;border-bottom:1px solid #2a3445;align-items:stretch}.trackname{width:135px;flex:none;padding:8px;border-right:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}.cells{display:flex;position:relative}.cell{width:24px;flex:none;border-right:1px solid #293346;position:relative;cursor:pointer}.cell.playhead{background:#31495d}.diamond{position:absolute;width:9px;height:9px;background:var(--orange);transform:rotate(45deg);left:7px;top:12px;border-radius:1px}.ruler{display:flex;min-height:24px;border-bottom:1px solid var(--line)}.ruler .trackname{padding:4px 8px}.ruler .cell{font-size:10px;color:var(--muted);padding-left:4px}
+.empty{color:var(--muted);text-align:center;padding:25px 12px}.hint{font-size:11px;color:var(--muted);padding:8px 10px;line-height:1.45}.hidden{display:none!important}
+@media(max-width:850px){.app{grid-template-columns:190px minmax(0,1fr);grid-template-rows:minmax(260px,1fr) 175px 180px}.left{grid-row:1/3}.center{grid-column:2}.right{grid-column:1/3;grid-row:3}.timeline{grid-column:1/3;grid-row:2}.right h3{padding:7px 10px}.props{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 10px}.field{grid-template-columns:50px 1fr 40px;margin:5px 0}}
+@media(max-width:560px){header{height:48px}.brand{font-size:14px}.app{height:calc(100dvh - 48px);grid-template-columns:1fr 1fr;grid-template-rows:minmax(210px,1fr) 160px 180px;gap:5px;padding:5px}.left{grid-column:1;grid-row:2}.center{grid-column:1/3;grid-row:1}.right{grid-column:2;grid-row:2}.timeline{grid-column:1/3;grid-row:3}.layer-actions button{padding:6px}.layer{padding:6px}.trackname{width:105px}.cell{width:22px}.field{grid-template-columns:42px 1fr 34px;font-size:11px}.props{padding:6px;display:block}.field{margin:6px 0}.toolbar{gap:4px;padding:5px}.toolbar button{padding:6px;font-size:12px}}
+</style>
+</head>
+<body>
+<header><div class="brand">PART<span>ANIMATOR</span></div><button id="importBtn" class="primary">＋ Import</button><button id="newSymbolBtn">＋ New Symbol</button><button id="exportBtn">Export</button><button id="saveProjectBtn">Save Project</button><button id="openProjectBtn">Open Project</button><button id="newBtn">New</button><input id="projectInput" type="file" accept="application/json,.partanim" hidden><input id="fileInput" type="file" accept="image/png,image/webp,image/jpeg" multiple hidden></header>
+<div class="app">
+<section class="panel left"><div class="side-tabs"><button id="layersTab" class="selected">Layers</button><button id="libraryTab">Library</button></div><div id="layersPane" class="pane"><div class="layer-actions"><button id="addLayer">＋ Add</button><button id="duplicate">Duplicate</button><button id="deleteLayer">Delete</button></div><div id="layers" class="layer-list"><div class="empty">Import transparent PNG parts to begin.</div></div><div class="hint">Select and move parts on the stage. Double-tap a library symbol to edit it.</div></div><div id="libraryPane" class="pane hidden"><div class="layer-actions"><button id="newGraphic">＋ Graphic</button><button id="newMovie">＋ Movie Clip</button></div><div id="library" class="layer-list"><div class="empty">Imported images and symbols appear here.</div></div><div class="layer-actions"><button id="addLibraryItem" class="primary">Add to Stage</button><button id="editLibraryItem">Edit</button></div><div class="hint">Double-click a symbol to edit its contents. Bitmap assets are reusable library items.</div></div></section>
+<section class="panel center"><div class="toolbar"><button id="fitBtn">Fit</button><button id="centerBtn">Center</button><button id="onionBtn">Onion: Off</button><span style="margin-left:auto;color:var(--muted);font-size:11px" id="stageInfo">Stage · 800 × 600</span></div><div class="workspace"><canvas id="stage"></canvas></div></section>
+<section class="panel right"><h3>Properties · selected part</h3><div class="props" id="props"><div class="empty">Select a layer to edit its transform.</div></div></section>
+<section class="panel timeline"><div class="timebar"><button id="playBtn">▶ Play</button><button id="stopBtn">■</button><button id="keyBtn" class="primary">◆ Keyframe</button><button id="prevBtn">◀</button><button id="nextBtn">▶</button><label>Frame <input id="frameInput" type="number" min="1" value="1"></label><label>FPS <input id="fpsInput" type="number" min="1" max="60" value="24"></label><span id="playState" style="color:var(--muted);font-size:11px">Stopped</span></div><div class="timeline-body" id="timeline"></div></section>
+</div>
+<script>
+(()=>{
+const $=id=>document.getElementById(id),canvas=$('stage'),ctx=canvas.getContext('2d');
+let layers=[],selected=null,frame=1,fps=24,playing=false,onion=false,lastTick=0,raf=0,drag=null,stageW=800,stageH=600,scale=1,offsetX=0,offsetY=0;
+let assets=[],symbols=[],selectedLibrary=null,editingSymbol=null,mainLayers=layers;
+const uid=()=>Math.random().toString(36).slice(2,10);
+const active=()=>layers.find(x=>x.id===selected);
+const sym=id=>symbols.find(x=>x.id===id);
+const cloneLayer=l=>({...l,id:uid(),transform:{...l.transform},keys:(l.keys||[]).map(k=>({f:k.f,t:{...k.t}}))});
+function resize(){let r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);canvas.width=Math.max(1,Math.round(r.width*d));canvas.height=Math.max(1,Math.round(r.height*d));ctx.setTransform(d,0,0,d,0,0);draw()}
+new ResizeObserver(resize).observe(canvas);
+function fit(){let r=canvas.getBoundingClientRect();scale=Math.min((r.width-40)/stageW,(r.height-40)/stageH);offsetX=(r.width-stageW*scale)/2;offsetY=(r.height-stageH*scale)/2;draw()}
+function stateAt(l,f){let keys=(l.keys||[]).slice().sort((a,b)=>a.f-b.f);if(!keys.length)return {...l.transform};let a=keys[0],b=keys[keys.length-1];for(let i=0;i<keys.length;i++){if(keys[i].f<=f)a=keys[i];if(keys[i].f>=f){b=keys[i];break}}if(a===b||b.f===a.f)return {...a.t};let t=(f-a.f)/(b.f-a.f);return Object.fromEntries(['x','y','rotation','sx','sy','alpha'].map(k=>[k,a.t[k]+(b.t[k]-a.t[k])*t]))}
+function drawNode(l,f,ghost=false){if(!l.visible)return;let t=stateAt(l,f);ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.rotation*Math.PI/180);ctx.scale(t.sx,t.sy);ctx.globalAlpha*=((t.alpha??1)*(ghost?.2:1));if(l.symbolId){let s=sym(l.symbolId);if(s){let sf=s.type==='Graphic'?1:((f-1)%Math.max(1,s.duration||24))+1;s.children.forEach(ch=>drawNode(ch,sf,ghost))}}else{let a=assets.find(a=>a.id===l.assetId);if(a?.img)ctx.drawImage(a.img,-l.px,-l.py)}ctx.restore()}
+function draw(){let r=canvas.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);ctx.fillStyle='#151c27';ctx.fillRect(0,0,r.width,r.height);ctx.save();ctx.translate(offsetX,offsetY);ctx.scale(scale,scale);ctx.strokeStyle='#2a3a4d';ctx.strokeRect(0,0,stageW,stageH);if(onion)layers.forEach(l=>{ctx.save();drawNode(l,Math.max(1,frame-1),true);ctx.restore()});[...layers].reverse().forEach(l=>drawNode(l,frame));let l=active();if(l){let t=stateAt(l,frame);ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.rotation*Math.PI/180);ctx.scale(t.sx,t.sy);let a=assets.find(a=>a.id===l.assetId),w=a?.img?.width||80,h=a?.img?.height||80;if(l.symbolId){let s=sym(l.symbolId);if(s){w=s.width||100;h=s.height||100}}ctx.strokeStyle='#55c4df';ctx.lineWidth=1/scale;ctx.setLineDash([5/scale,3/scale]);ctx.strokeRect(-w/2,-h/2,w,h);ctx.setLineDash([]);ctx.fillStyle='#ffbd69';ctx.beginPath();ctx.arc(0,0,4/scale,0,Math.PI*2);ctx.fill();ctx.restore()}ctx.restore()}
+function renderLayers(){let el=$('layers');el.innerHTML='';if(!layers.length){el.innerHTML='<div class="empty">No layers in this scene.</div>';return}layers.forEach(l=>{let row=document.createElement('div');row.className='layer'+(l.id===selected?' active':'');let icon=l.symbolId?'▣':'▧';row.innerHTML=`<button class="icon eye">${l.visible?'◉':'○'}</button><span class="name"></span><small>${icon}</small>`;row.querySelector('.name').textContent=l.name;row.onclick=()=>{selected=l.id;renderAll()};row.querySelector('.eye').onclick=e=>{e.stopPropagation();l.visible=!l.visible;renderAll()};el.append(row)})}
+function renderLibrary(){let el=$('library');el.innerHTML='';if(!symbols.length){el.innerHTML='<div class="empty">Import an image to create a Graphic, or create a Movie Clip.</div>';return}symbols.forEach(s=>libraryRow(s.id,s.type==='Graphic'?'▣':'🎞',s.name,s.type))}
+function libraryRow(id,ico,name,type){let row=document.createElement('div');row.className='library-item'+(selectedLibrary===id?' active':'');row.innerHTML=`<span>${ico}</span><span class="name"></span><small></small>`;row.querySelector('.name').textContent=name;row.querySelector('small').textContent=type;row.onclick=()=>{selectedLibrary=id;renderLibrary()};row.ondblclick=()=>{if(sym(id))editSymbol(id)};row.addEventListener('pointerdown',e=>beginLibraryDrag(e,id,name,type,row));$('library').append(row)}
+function renderProps(){let p=$('props'),l=active();if(!l){p.innerHTML='<div class="empty">Select a layer to edit its transform.</div>';return}let t=stateAt(l,frame);p.innerHTML='';[['X','x',-2000,2000,1],['Y','y',-2000,2000,1],['Rotation','rotation',-360,360,1],['Scale X','sx',.05,5,.01],['Scale Y','sy',.05,5,.01],['Opacity','alpha',0,1,.01]].forEach(([label,key,min,max,step])=>{let d=document.createElement('label');d.className='field';d.innerHTML=`<span>${label}</span><input type="range" min="${min}" max="${max}" step="${step}" value="${t[key]}"><output>${Number(t[key]).toFixed(2)}</output>`;let inp=d.querySelector('input');inp.oninput=()=>{let v=+inp.value;setProp(key,v);d.querySelector('output').textContent=v.toFixed(2)};p.append(d)});let name=document.createElement('label');name.className='field';name.style.gridTemplateColumns='65px 1fr';name.innerHTML='<span>Name</span><input type="text">';name.querySelector('input').value=l.name;name.querySelector('input').onchange=e=>{l.name=e.target.value||'Part';renderAll()};p.append(name)}
+function renderTimeline(){let el=$('timeline');el.innerHTML='';let ruler=document.createElement('div');ruler.className='ruler';ruler.innerHTML='<div class="trackname">Layer / Frame</div>';let total=Math.max(40,frame+10,...layers.flatMap(l=>(l.keys||[]).map(k=>k.f)));for(let i=1;i<=total;i++){let c=document.createElement('div');c.className='cell';c.textContent=i%5===0||i===1?i:'';c.onclick=()=>goFrame(i);ruler.append(c)}el.append(ruler);layers.forEach(l=>{let tr=document.createElement('div');tr.className='track';let nm=document.createElement('div');nm.className='trackname';nm.textContent=l.name;tr.append(nm);let cells=document.createElement('div');cells.className='cells';for(let i=1;i<=total;i++){let c=document.createElement('div');c.className='cell'+(i===frame?' playhead':'');c.onclick=()=>{selected=l.id;goFrame(i)};if((l.keys||[]).some(k=>k.f===i)){let dm=document.createElement('i');dm.className='diamond';c.append(dm)}cells.append(c)}tr.append(cells);el.append(tr)})}
+function renderAll(){renderLayers();renderProps();renderTimeline();renderLibrary();draw()}
+function putKey(l,f,t){let i=l.keys.findIndex(k=>k.f===f);if(i>=0)l.keys[i].t={...t};else l.keys.push({f,t:{...t}});l.keys.sort((a,b)=>a.f-b.f);renderTimeline()}
+function setProp(k,v){let l=active();if(!l)return;let t=stateAt(l,frame);t[k]=v;putKey(l,frame,t);draw()}
+function goFrame(f){frame=Math.max(1,Math.floor(f));$('frameInput').value=frame;renderProps();renderTimeline();draw()}
+function makeLayer(name='Part',assetId=null,symbolId=null){let origin=editingSymbol?0:stageW/2;let l={id:uid(),name,assetId,symbolId,visible:true,px:0,py:0,transform:{x:origin,y:editingSymbol?0:stageH/2,rotation:0,sx:1,sy:1,alpha:1},keys:[]};let a=assets.find(a=>a.id===assetId);if(a?.img){l.px=a.img.width/2;l.py=a.img.height/2}l.keys=[{f:1,t:{...l.transform}}];layers.push(l);selected=l.id;return l}
+function importFiles(files){[...files].filter(f=>/^image\/(png|webp|jpeg)$/.test(f.type)).forEach(file=>{let url=URL.createObjectURL(file),img=new Image();img.onload=()=>{let base=file.name.replace(/\.[^.]+$/,'');let a={id:uid(),name:base,img};assets.push(a);let child={id:uid(),name:base,assetId:a.id,symbolId:null,visible:true,px:img.width/2,py:img.height/2,transform:{x:0,y:0,rotation:0,sx:1,sy:1,alpha:1},keys:[{f:1,t:{x:0,y:0,rotation:0,sx:1,sy:1,alpha:1}}]};let graphic={id:uid(),name:base,type:'Graphic',children:[child],duration:1,width:img.width,height:img.height};symbols.push(graphic);let instance=makeLayer(base,null,graphic.id);instance.transform.x=stageW/2;instance.transform.y=stageH/2;instance.keys=[{f:1,t:{...instance.transform}}];selectedLibrary=graphic.id;renderAll();URL.revokeObjectURL(url)};img.onerror=()=>URL.revokeObjectURL(url);img.src=url})}
+function createSymbol(type){let name=prompt('Name your '+type+':',type==='Graphic'?'New Graphic':'New Movie Clip');if(!name)return;let children=[];let chosen=active();if(chosen){let child=cloneLayer(chosen);child.transform.x=0;child.transform.y=0;child.keys=child.keys.map(k=>({...k,t:{...k.t,x:0,y:0}}));children=[child];layers=layers.filter(x=>x.id!==chosen.id);selected=null}let s={id:uid(),name,type,children,duration:24,width:120,height:120};symbols.push(s);selectedLibrary=s.id;editSymbol(s.id);renderAll()}
+function editSymbol(id){let s=sym(id);if(!s)return;if(editingSymbol){let old=sym(editingSymbol);if(old)old.children=layers}else{mainLayers=layers}editingSymbol=id;layers=s.children;selected=layers[0]?.id||null;frame=1;$('stageInfo').textContent='Editing '+s.type+' · '+s.name;$('layersTab').click();renderAll()}
+function exitSymbol(){if(!editingSymbol)return;let s=sym(editingSymbol);if(s)s.children=layers;editingSymbol=null;layers=mainLayers;selected=layers[0]?.id||null;frame=1;$('stageInfo').textContent='Stage · 800 × 600';renderAll()}
+function addLibraryToStage(){let id=selectedLibrary;if(!id)return;if(sym(id)){makeLayer(sym(id).name,null,id)}else{let a=assets.find(x=>x.id===id);if(a)makeLayer(a.name,a.id)}renderAll()}
+let libraryDrag=null,dragGhost=null;function beginLibraryDrag(e,id,name,type,row){if(e.button!==undefined&&e.button!==0)return;libraryDrag={id,name,startX:e.clientX,startY:e.clientY,moved:false};try{row.setPointerCapture(e.pointerId)}catch(_){} }
+document.addEventListener('pointermove',e=>{if(!libraryDrag)return;let dx=e.clientX-libraryDrag.startX,dy=e.clientY-libraryDrag.startY;if(!libraryDrag.moved&&Math.hypot(dx,dy)>8){libraryDrag.moved=true;dragGhost=document.createElement('div');dragGhost.textContent='＋ '+libraryDrag.name;Object.assign(dragGhost.style,{position:'fixed',zIndex:9999,pointerEvents:'none',padding:'9px 13px',borderRadius:'8px',background:'#17677c',border:'1px solid #55c4df',color:'white',left:e.clientX+12+'px',top:e.clientY+12+'px'});document.body.append(dragGhost)}if(dragGhost){dragGhost.style.left=e.clientX+12+'px';dragGhost.style.top=e.clientY+12+'px'}});
+document.addEventListener('pointerup',e=>{if(!libraryDrag)return;let d=libraryDrag;libraryDrag=null;if(dragGhost){dragGhost.remove();dragGhost=null}if(!d.moved)return;let r=canvas.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)return;let item=sym(d.id);if(!item)return;selectedLibrary=d.id;let l=makeLayer(item.name,null,item.id);let x=(e.clientX-r.left-offsetX)/scale,y=(e.clientY-r.top-offsetY)/scale;l.transform.x=x;l.transform.y=y;l.keys=[{f:frame,t:{...l.transform}}];$('layersTab').click();renderAll()});
+
+  // Save/load the complete editable project, including imported bitmap data.
+  $('saveProjectBtn').onclick=async()=>{
+    try{
+      const imageData=[];
+      for(const a of assets){
+        const c=document.createElement('canvas');
+        c.width=a.img.naturalWidth||a.img.width;
+        c.height=a.img.naturalHeight||a.img.height;
+        c.getContext('2d').drawImage(a.img,0,0);
+        imageData.push({id:a.id,name:a.name,data:c.toDataURL('image/png')});
+      }
+      const project={
+        format:'PartAnimatorProject',version:1,
+        stage:{width:stageW,height:stageH},
+        fps,frame,selected,selectedLibrary,editingSymbol,
+        assets:imageData,symbols,
+        layers,mainLayers
+      };
+      download('PartAnimator-Project.partanim',new Blob([JSON.stringify(project)],{type:'application/json'}));
+      $('playState').textContent='Project saved';
+    }catch(err){
+      alert('Could not save project: '+err.message);
+    }
+  };
+  $('openProjectBtn').onclick=()=>$('projectInput').click();
+  $('projectInput').onchange=async e=>{
+    const file=e.target.files[0];e.target.value='';
+    if(!file)return;
+    try{
+      const project=JSON.parse(await file.text());
+      if(project.format!=='PartAnimatorProject')throw new Error('This is not a PartAnimator project.');
+      stop();
+      const loadedAssets=await Promise.all((project.assets||[]).map(item=>new Promise((resolve,reject)=>{
+        const img=new Image();
+        img.onload=()=>resolve({id:item.id,name:item.name,img});
+        img.onerror=()=>reject(new Error('Could not load image: '+item.name));
+        img.src=item.data;
+      })));
+      assets=loadedAssets;
+      symbols=project.symbols||[];
+      stageW=project.stage?.width||800;
+      stageH=project.stage?.height||600;
+      fps=project.fps||24;
+      $('fpsInput').value=fps;
+      mainLayers=project.mainLayers||[];
+      layers=project.layers||mainLayers;
+      editingSymbol=project.editingSymbol||null;
+      selected=project.selected||null;
+      selectedLibrary=project.selectedLibrary||null;
+      frame=project.frame||1;
+      $('stageInfo').textContent=editingSymbol
+        ? 'Editing '+(sym(editingSymbol)?.type||'Symbol')+' · '+(sym(editingSymbol)?.name||'')
+        : 'Stage · '+stageW+' × '+stageH;
+      $('frameInput').value=frame;
+      $('layersTab').click();
+      fit();
+      renderAll();
+      $('playState').textContent='Project loaded';
+    }catch(err){
+      alert('Could not open project: '+err.message);
+    }
+  };
+  $('importBtn').onclick=()=>$('fileInput').click();$('fileInput').onchange=e=>{importFiles(e.target.files);e.target.value=''};
+
+$('addLayer').onclick=()=>{let l=makeLayer();renderAll()};$('deleteLayer').onclick=()=>{layers=layers.filter(l=>l.id!==selected);selected=layers.at(-1)?.id||null;renderAll()};$('duplicate').onclick=()=>{let l=active();if(l){let c=cloneLayer(l);c.name+=' copy';layers.push(c);selected=c.id;renderAll()}};
+$('newSymbolBtn').onclick=()=>createSymbol('Movie Clip');$('newGraphic').onclick=()=>createSymbol('Graphic');$('newMovie').onclick=()=>createSymbol('Movie Clip');$('addLibraryItem').onclick=addLibraryToStage;$('editLibraryItem').onclick=()=>{if(sym(selectedLibrary))editSymbol(selectedLibrary);else alert('Select a Graphic or Movie Clip to edit.')};
+$('layersTab').onclick=()=>{$('layersTab').classList.add('selected');$('libraryTab').classList.remove('selected');$('layersPane').classList.remove('hidden');$('libraryPane').classList.add('hidden')};$('libraryTab').onclick=()=>{$('libraryTab').classList.add('selected');$('layersTab').classList.remove('selected');$('libraryPane').classList.remove('hidden');$('layersPane').classList.add('hidden')};
+$('keyBtn').onclick=()=>{let l=active();if(l){putKey(l,frame,stateAt(l,frame));renderAll()}};$('prevBtn').onclick=()=>goFrame(frame-1);$('nextBtn').onclick=()=>goFrame(frame+1);$('frameInput').onchange=e=>goFrame(+e.target.value||1);$('fpsInput').onchange=e=>fps=Math.max(1,Math.min(60,+e.target.value||24));$('onionBtn').onclick=()=>{onion=!onion;$('onionBtn').textContent='Onion: '+(onion?'On':'Off');draw()};$('fitBtn').onclick=fit;$('centerBtn').onclick=()=>{let l=active();if(l){let t=stateAt(l,frame);t.x=stageW/2;t.y=stageH/2;putKey(l,frame,t);renderAll()}};
+function tick(ts){if(!playing)return;if(ts-lastTick>1000/fps){let max=editingSymbol&&sym(editingSymbol)?.type==='Graphic'?1:120;goFrame(frame>=max?1:frame+1);lastTick=ts}raf=requestAnimationFrame(tick)}function play(){if(playing)return;playing=true;$('playBtn').textContent='Ⅱ Pause';$('playState').textContent='Playing';lastTick=0;raf=requestAnimationFrame(tick)}function stop(){playing=false;cancelAnimationFrame(raf);$('playBtn').textContent='▶ Play';$('playState').textContent='Stopped'}$('playBtn').onclick=()=>playing?stop():play();$('stopBtn').onclick=()=>{stop();goFrame(1)};
+function point(e){let r=canvas.getBoundingClientRect();return {x:(e.clientX-r.left-offsetX)/scale,y:(e.clientY-r.top-offsetY)/scale}}canvas.addEventListener('pointerdown',e=>{let l=active();if(!l)return;let p=point(e),t=stateAt(l,frame);drag={id:l.id,dx:p.x-t.x,dy:p.y-t.y};canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointermove',e=>{if(!drag)return;let l=layers.find(x=>x.id===drag.id);if(!l)return;let p=point(e),t=stateAt(l,frame);t.x=p.x-drag.dx;t.y=p.y-drag.dy;putKey(l,frame,t);renderProps();draw()});canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
+$('newBtn').onclick=()=>{if(!confirm('Clear this project?'))return;stop();if(editingSymbol)exitSymbol();layers=[];mainLayers=layers;assets=[];symbols=[];selected=null;selectedLibrary=null;goFrame(1);renderAll()};
+function download(name,blob){let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function exportFiles(){
+  if(!assets.length){alert('Import at least one image first.');return}
+  // Pack source bitmaps. Atlas index order is shared with ASI.N in Animation.json.
+  const pad=2,maxW=2048;let x=pad,y=pad,rowH=0,placements=[];
+  for(const a of assets){const w=a.img.width,h=a.img.height;if(x+w+pad>maxW){x=pad;y+=rowH+pad;rowH=0}placements.push({a,x,y,w,h,index:placements.length});x+=w+pad;rowH=Math.max(rowH,h)}
+  const W=Math.max(1,...placements.map(q=>q.x+q.w+pad)),H=Math.max(1,...placements.map(q=>q.y+q.h+pad));
+  const atlasCanvas=document.createElement('canvas');atlasCanvas.width=W;atlasCanvas.height=H;const ag=atlasCanvas.getContext('2d');placements.forEach(q=>ag.drawImage(q.a.img,q.x,q.y));
+  const assetIndex=new Map(placements.map(q=>[q.a.id,String(q.index)]));
+  const matrix=t=>{const r=(t.rotation||0)*Math.PI/180,sx=t.sx??1,sy=t.sy??1,co=Math.cos(r),si=Math.sin(r);return [+(co*sx).toFixed(4),+(si*sx).toFixed(4),+(-si*sy).toFixed(4),+(co*sy).toFixed(4),+(t.x||0),+(t.y||0)]};
+  const sortedKeys=l=>(l.keys||[]).slice().sort((a,b)=>a.f-b.f);
+  function instanceElement(l,k){
+    const t=k.t||l.transform||{x:0,y:0,rotation:0,sx:1,sy:1};
+    if(l.symbolId){const target=sym(l.symbolId);if(!target)return null;return {SI:{SN:target.name,FF:0,ST:(target.type==='Movie Clip'?'M':'G'),TRP:{x:0,y:0},LP:'LP',MX:matrix(t)}}}
+    if(l.assetId){const idx=assetIndex.get(l.assetId);if(idx===undefined)return null;return {ASI:{MX:matrix(t),N:idx}}}
+    return null;
+  }
+  function makeTimeline(sourceLayers,defaultDuration=1){
+    return {L:sourceLayers.map(l=>{
+      const keys=sortedKeys(l);let FR=[];
+      if(!keys.length){FR=[{I:0,DU:defaultDuration,E:[]}]}else{
+        keys.forEach((k,i)=>{const next=keys[i+1],du=Math.max(1,(next?next.f:Math.max(k.f+1,defaultDuration+1))-k.f);const el=instanceElement(l,k);FR.push({I:Math.max(0,k.f-1),DU:du,E:el?[el]:[]})});
+      }
+      return {LN:l.name||'Layer',FR};
+    })};
+  }
+  // Every imported bitmap is a Graphic symbol in the Library. Movie Clips and
+  // Graphic symbols are serialized into SD.S using BTA's SI/ASI element shapes.
+  const symbolDefs=[];
+  for(const a of assets){
+    const graphic=symbols.find(s=>s.type==='Graphic'&&s.children?.some(ch=>ch.assetId===a.id));
+    const sn=graphic?.name||a.name;
+    symbolDefs.push({SN:sn,TL:{L:[{LN:'Layer 1',FR:[{I:0,DU:1,E:[{ASI:{MX:[1,0,0,1,0,0],N:assetIndex.get(a.id)}}]}]}]}});
+  }
+  for(const s of symbols){
+    if(s.type==='Graphic')continue;
+    symbolDefs.push({SN:s.name,TL:makeTimeline(s.children||[],Math.max(1,s.duration||24))});
+  }
+  const main={AN:{N:'PartAnimator Export',SN:'Scene 1',TL:makeTimeline(mainLayers,1)},SD:{S:symbolDefs},MD:{V:'BTA 1.1.0',N:'PartAnimator Export',BGC:'#999999',W:stageW,H:stageH,ASV:3,FRT:fps}};
+  // BetterTextureAtlas / Adobe Animate spritemap schema.
+  const atlasMeta={
+    ATLAS:{SPRITES:placements.map(q=>({SPRITE:{name:String(q.index),x:q.x,y:q.y,w:q.w,h:q.h,rotated:false}}))},
+    meta:{app:'Adobe Animate (Better TA Extension)',version:'24.0.2.12',image:'spritemap1.png',format:'RGBA8888',size:{w:W,h:H},resolution:'1'}
+  };
+  atlasCanvas.toBlob(blob=>{
+    if(!blob){alert('Could not create atlas PNG.');return}
+    download('spritemap1.png',blob);
+    download('spritemap1.json',new Blob([JSON.stringify(atlasMeta,null,2)],{type:'application/json'}));
+    download('Animation.json',new Blob([JSON.stringify(main,null,2)],{type:'application/json'}));
+    $('playState').textContent='Exported Animation.json + Adobe Animate spritemap';
+  },'image/png');
+}
+$('exportBtn').onclick=exportFiles;
+// expose a clear way back to the main scene when editing a symbol
+let back=document.createElement('button');back.textContent='← Scene';back.onclick=exitSymbol;$('stageInfo').parentElement.insertBefore(back,$('stageInfo'));
+fit();renderAll();
+})();
+</script>
+</body></html>
