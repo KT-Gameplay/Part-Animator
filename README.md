@@ -7,9 +7,8 @@
 ## 🚀 Getting Started
 
 Part Animator runs entirely in your web browser with no installation or build steps required.
-1. Open `PartAnimator-Project-Save.html` in any modern desktop or mobile browser.
-2. Click **＋ Import** in the top bar to load transparent `.png`, `.webp`, or `.jpeg` images (e.g., character body parts like head, torso, arms, and legs).
-3. Imported images automatically become reusable **Graphic Symbols** in your Library and are placed onto the center of the stage ($800 \times 600$).
+1. Click **＋ Import** in the top bar to load transparent `.png`, `.webp`, or `.jpeg` images (e.g., character body parts like head, torso, arms, and legs).
+2. Imported images automatically become reusable **Graphic Symbols** in your Library and are placed onto the center of the stage ($800 \times 600$).
 
 ---
 
