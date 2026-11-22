@@ -85,6 +85,6 @@ Just like Adobe Animate, Part Animator distinguishes between two symbol types:
 
 ### Exporting for Game Engines / Adobe Animate
 Clicking **Export** packs all imported bitmaps into a single sprite sheet and downloads three files compatible with **BetterTextureAtlas (BTA)** and **Adobe Animate** workflows:
-1. `spritemap1.png` — The packed texture atlas containing all your image parts.
-2. `spritemap1.json` — Atlas coordinates and sprite bounding boxes.
-3. `Animation.json` — Scene hierarchy, symbol definitions (`SD`), layer timelines (`TL`), and transformation matrices (`MX`).
+1. `spritemap1.png`
+2. `spritemap1.json`
+3. `Animation.json`
