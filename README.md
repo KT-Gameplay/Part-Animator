@@ -20,7 +20,7 @@ The interface is divided into four main panels:
 * **＋ Import:** Load image files from your device into the Library and Stage.
 * **＋ New Symbol:** Quickly create a new **Movie Clip** symbol (wraps the currently selected layer if one is active).
 * **Export:** Generates a packed texture atlas and animation data compatible with Adobe Animate / BetterTextureAtlas (`spritemap1.png`, `spritemap1.json`, and `Animation.json`).
-* **Save Project / Open Project:** Save your entire workspace—including embedded image data, symbols, layers, and keyframes—as a `.partanim` JSON file to resume editing later.
+* **Save Project / Open Project:** Save your entire workspace—including embedded image data, symbols, layers, and keyframes—as a `.partanim` file to resume editing later.
 * **New:** Clears the current workspace to start fresh.
 
 ### 2. Left Panel: Layers & Library
